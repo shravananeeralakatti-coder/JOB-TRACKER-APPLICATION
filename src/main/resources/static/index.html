@@ -98,7 +98,7 @@ button:hover {
 
 <div class="container">
 
-<h2>🚀 Job Tracker</h2>
+<h2>&#128640; Job Tracker</h2>
 
 <div class="dashboard">
     <div>Total: <span id="total">0</span></div>
@@ -134,7 +134,7 @@ button:hover {
 
 let editingId = null;
 
-// 🔐 Protect page
+// 🔐 Protect page (must login first)
 function checkAuth() {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -166,11 +166,11 @@ function addJob() {
         dateApplied: date.value
     };
 
-    let url = "http://localhost:8080/jobs";
+    let url = "/jobs";
     let method = "POST";
 
     if (editingId !== null) {
-        url = `http://localhost:8080/jobs/${editingId}`;
+        url = `/jobs/${editingId}`;
         method = "PUT";
     }
 
@@ -200,7 +200,7 @@ function loadJobs() {
 
     const token = localStorage.getItem("token");
 
-    fetch("http://localhost:8080/jobs", {
+    fetch("/jobs", {
         headers: {
             "Authorization": "Bearer " + token
         }
@@ -257,7 +257,7 @@ function deleteJob(id) {
 
     const token = localStorage.getItem("token");
 
-    fetch(`http://localhost:8080/jobs/${id}`, {
+    fetch(`/jobs/${id}`, {
         method: "DELETE",
         headers: {
             "Authorization": "Bearer " + token
@@ -285,7 +285,48 @@ function filterJobs() {
     });
 }
 
-// 🚀 ON LOAD
+// 🔐 LOGIN FUNCTION
+function login() {
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    fetch("/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    })
+    .then(res => res.text())
+    .then(token => {
+
+        if (token.includes("Invalid") || token.includes("not found")) {
+            alert(token);
+            return;
+        }
+
+        // ✅ Save token
+        localStorage.setItem("token", token);
+
+        alert("Login successful");
+
+        // 👉 Redirect
+        window.location.href = "index.html";
+    });
+}
+
+// 🚪 LOGOUT
+function logout() {
+    localStorage.removeItem("token");
+    alert("Logged out");
+    window.location.href = "login.html";
+}
+
+// 🚀 ON PAGE LOAD
 window.onload = function () {
     checkAuth();
     loadJobs();
