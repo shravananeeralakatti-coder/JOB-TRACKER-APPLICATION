@@ -11,18 +11,16 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ----------- Run Stage -----------
-# Using the full JRE instead of alpine for better compatibility with native libraries
 FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
 # Copy the executable jar from build stage
-# Using a wildcard to be safer with the exact filename
 COPY --from=build /app/target/job_tracker_app-*.jar app.jar
 
 # Ensure the app listens on the port Render provides
-ENV PORT=8080
-EXPOSE 8080
+ENV PORT=10000
+EXPOSE 10000
 
-# Run the application
-ENTRYPOINT ["java","-Dserver.port=${PORT}","-jar","app.jar"]
+# Run the application with specific port mapping
+CMD java -Dserver.port=${PORT} -jar app.jar
