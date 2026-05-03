@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Job Tracker</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f8;
+            text-align: center;
+        }
+
+        .container {
+            width: 300px;
+            margin: 100px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        input {
+            width: 90%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .register-btn {
+            background-color: green;
+        }
+
+        .register-btn:hover {
+            background-color: darkgreen;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sign in for Job Tracker</h2>
+
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+
+    <button onclick="login()">Login</button>
+    <br>
+    <button class="register-btn" onclick="register()">Register</button>
+
+    <p id="message"></p>
+</div>
+
+<script>
+
+// 🔐 LOGIN
+function login() {
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    fetch("http://localhost:8080/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.text())
+    .then(response => {
+
+        const message = document.getElementById("message");
+
+        // ❌ USER NOT FOUND
+        if (response === "User not found") {
+            message.innerHTML = "⚠️ You are not registered. <b>Click Register</b>";
+            message.style.color = "red";
+            return; // 🔥 VERY IMPORTANT
+        }
+
+        // ❌ WRONG PASSWORD
+        if (response === "Invalid password") {
+            message.innerText = "❌ Incorrect password. Try again.";
+            message.style.color = "orange";
+            return;
+        }
+
+        // ✅ SUCCESS LOGIN
+        localStorage.setItem("token", response);
+
+        message.innerText = "✅ Login successful!";
+        message.style.color = "green";
+
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 1000);
+    });
+}
+
+// 📝 REGISTER
+function register() {
+
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+
+    fetch("http://localhost:8080/auth/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+    })
+    .then(res => res.text())
+    .then(response => {
+        document.getElementById("message").innerText = response;
+    });
+}
+
+</script>
+
+</body>
+</html>

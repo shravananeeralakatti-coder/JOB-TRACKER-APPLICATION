@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+   <meta charset="UTF-8">
+   <title>Job Tracker</title>
+
+<style>
+
+/* 🌙 Background */
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    margin: 0;
+    padding: 0;
+    color: white;
+}
+
+/* 📦 Container */
+.container {
+    width: 90%;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* 📊 Dashboard */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.dashboard div {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* ✏ Inputs */
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 8px;
+    border: none;
+}
+
+/* 🔵 Buttons */
+button {
+    padding: 12px;
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 8px;
+    background: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+/* 🔴 Delete */
+.delete-btn {
+    background: red;
+}
+
+/* 📦 Job Card */
+.job-item {
+    background: rgba(255,255,255,0.08);
+    padding: 15px;
+    margin-top: 12px;
+    border-radius: 12px;
+}
+
+/* 🎯 Badge */
+.badge {
+    padding: 5px 10px;
+    border-radius: 20px;
+    margin-left: 10px;
+    font-size: 12px;
+}
+
+.applied { background: blue; }
+.interview { background: orange; }
+.offer { background: green; }
+.rejected { background: red; }
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>🚀 Job Tracker</h2>
+
+<div class="dashboard">
+    <div>Total: <span id="total">0</span></div>
+    <div>Applied: <span id="applied">0</span></div>
+    <div>Interview: <span id="interview">0</span></div>
+    <div>Offer: <span id="offer">0</span></div>
+    <div>Rejected: <span id="rejected">0</span></div>
+</div>
+
+<input id="company" placeholder="Company">
+<input id="role" placeholder="Role">
+
+<select id="status">
+    <option value="">Select Status</option>
+    <option value="Applied">Applied</option>
+    <option value="Interview">Interview</option>
+    <option value="Offer">Offer</option>
+    <option value="Rejected">Rejected</option>
+</select>
+
+<input type="date" id="date">
+
+<button id="submitBtn" onclick="addJob()">Add Job</button>
+
+<input id="search" placeholder="🔍 Search..." onkeyup="filterJobs()">
+
+<h3>Job List</h3>
+<div id="jobList"></div>
+
+</div>
+
+<script>
+
+let editingId = null;
+
+// 🔐 Protect page
+function checkAuth() {
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("Please login first");
+        window.location.href = "login.html";
+    }
+}
+
+// ➕ ADD / UPDATE JOB
+function addJob() {
+
+    const token = localStorage.getItem("token");
+
+    const company = document.getElementById("company");
+    const role = document.getElementById("role");
+    const status = document.getElementById("status");
+    const date = document.getElementById("date");
+    const btn = document.getElementById("submitBtn");
+
+    if (!company.value || !role.value || !status.value) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    const job = {
+        company: company.value,
+        role: role.value,
+        status: status.value,
+        dateApplied: date.value
+    };
+
+    let url = "http://localhost:8080/jobs";
+    let method = "POST";
+
+    if (editingId !== null) {
+        url = `http://localhost:8080/jobs/${editingId}`;
+        method = "PUT";
+    }
+
+    fetch(url, {
+        method: method,
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify(job)
+    })
+    .then(() => {
+        loadJobs();
+
+        company.value = "";
+        role.value = "";
+        status.value = "";
+        date.value = "";
+
+        editingId = null;
+        btn.innerText = "Add Job";
+    });
+}
+
+// 📥 LOAD JOBS
+function loadJobs() {
+
+    const token = localStorage.getItem("token");
+
+    fetch("http://localhost:8080/jobs", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        const list = document.getElementById("jobList");
+        list.innerHTML = "";
+
+        let total = data.length;
+        let applied = 0, interview = 0, offer = 0, rejected = 0;
+
+        data.forEach(job => {
+
+            const status = job.status ? job.status.toLowerCase() : "";
+
+            if (status === "applied") applied++;
+            if (status === "interview") interview++;
+            if (status === "offer") offer++;
+            if (status === "rejected") rejected++;
+
+            const div = document.createElement("div");
+            div.className = "job-item";
+
+            div.innerHTML = `
+                <div>
+                    <b>${job.company}</b> - ${job.role}
+                    <span class="badge ${status}">${job.status}</span>
+                </div>
+
+                <small>Date: ${job.dateApplied || "N/A"}</small>
+
+                <button onclick="editJob(${job.id}, '${job.company}', '${job.role}', '${job.status}', '${job.dateApplied || ""}')">Edit</button>
+                <button class="delete-btn" onclick="deleteJob(${job.id})">Delete</button>
+            `;
+
+            list.appendChild(div);
+        });
+
+        document.getElementById("total").innerText = total;
+        document.getElementById("applied").innerText = applied;
+        document.getElementById("interview").innerText = interview;
+        document.getElementById("offer").innerText = offer;
+        document.getElementById("rejected").innerText = rejected;
+
+        editingId = null;
+        document.getElementById("submitBtn").innerText = "Add Job";
+    });
+}
+
+// ❌ DELETE JOB
+function deleteJob(id) {
+
+    const token = localStorage.getItem("token");
+
+    fetch(`http://localhost:8080/jobs/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    })
+    .then(() => loadJobs());
+}
+
+// ✏️ EDIT JOB
+function editJob(id, company, role, status, date) {
+    document.getElementById("company").value = company;
+    document.getElementById("role").value = role;
+    document.getElementById("status").value = status;
+    document.getElementById("date").value = date;
+
+    editingId = id;
+    document.getElementById("submitBtn").innerText = "Update Job";
+}
+
+// 🔍 FILTER JOBS
+function filterJobs() {
+    const search = document.getElementById("search").value.toLowerCase();
+    document.querySelectorAll(".job-item").forEach(item => {
+        item.style.display = item.innerText.toLowerCase().includes(search) ? "block" : "none";
+    });
+}
+
+// 🚀 ON LOAD
+window.onload = function () {
+    checkAuth();
+    loadJobs();
+};
+
+</script>
+
+</body>
+</html>
