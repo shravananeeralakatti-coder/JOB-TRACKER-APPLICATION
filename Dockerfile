@@ -11,18 +11,18 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ----------- Run Stage -----------
-FROM eclipse-temurin:17-jdk-alpine
+# Using the full JRE instead of alpine for better compatibility with native libraries
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 
 # Copy the executable jar from build stage
-# We use a wildcard but ensure we get the main one by excluding common extras if necessary, 
-# or just rely on the fact that we'll rename it in the next step or use a specific pattern.
-COPY --from=build /app/target/job_tracker_app-0.0.1-SNAPSHOT.jar app.jar
+# Using a wildcard to be safer with the exact filename
+COPY --from=build /app/target/job_tracker_app-*.jar app.jar
 
 # Ensure the app listens on the port Render provides
 ENV PORT=8080
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java","-Dserver.port=${PORT}","-jar","app.jar"]
