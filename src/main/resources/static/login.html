@@ -4,37 +4,56 @@
     <meta charset="UTF-8">
     <title>Login - Job Tracker</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f4f6f8;
-            text-align: center;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
         .container {
-            width: 300px;
-            margin: 100px auto;
+            width: 90%;
+            max-width: 350px;
             background: white;
-            padding: 20px;
+            padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
         }
 
         input {
-            width: 90%;
-            padding: 10px;
+            width: 100%;
+            padding: 12px;
             margin: 10px 0;
             border-radius: 5px;
-            border: 1px solid #ccc;
+            border: 1px solid #ddd;
+            font-size: 14px;
         }
 
         button {
-            padding: 10px 20px;
-            margin: 5px;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
             background-color: #007BFF;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.2s;
         }
 
         button:hover {
@@ -42,11 +61,17 @@
         }
 
         .register-btn {
-            background-color: green;
+            background-color: #28a745;
         }
 
         .register-btn:hover {
-            background-color: darkgreen;
+            background-color: #218838;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-size: 14px;
+            min-height: 1em;
         }
 
     </style>
@@ -60,7 +85,6 @@
     <input type="password" id="password" placeholder="Password">
 
     <button onclick="login()">Login</button>
-    <br>
     <button class="register-btn" onclick="register()">Register</button>
 
     <p id="message"></p>
@@ -74,7 +98,7 @@ function login() {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    fetch("http://localhost:8080/auth/login", {
+    fetch("/auth/login", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -118,7 +142,7 @@ function register() {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    fetch("http://localhost:8080/auth/register", {
+    fetch("/auth/register", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
